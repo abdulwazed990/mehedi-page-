@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-display: "Space Grotesk", sans-serif;
+  
+  --color-brand-green-light: #FAF6EE;
+  --color-brand-green-medium: #8FA88B;
+  --color-brand-green-dark: #5D7A5C;
+  --color-brand-gold: #cfa856;
+}
+
+/* Custom scrollbar to keep layout premium and modern */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF6EE;
+}
+::-webkit-scrollbar-thumb {
+  background: #8FA88B;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #cfa856;
+}
+
+body {
+  background-color: #FAF6EE;
+  color: #334155;
+  font-family: var(--font-sans);
+}
+
+.font-bengali {
+  font-family: 'Inter', 'Noto Sans Bengali', sans-serif;
+}
