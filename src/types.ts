@@ -13,6 +13,8 @@ export interface Product {
   fbImageLink: string;
   category: 'hand' | 'nail';
   description: string;
+  isCombo?: boolean;
+  isHighlighted?: boolean;
 }
 
 export interface CartItem {
@@ -55,7 +57,10 @@ export interface Order {
   bKashTrxID: string;
   paidAmount: number;
   orderDate: string;
-  status: 'Pending Verification' | 'Processing' | 'Shipped' | 'Cancelled';
+  status: 'Pending Verification' | 'Processing' | 'Shipped' | 'Cancelled' | 'Delivered';
+  deliveryStatus?: 'Processing' | 'Packaging' | 'Ready to Ship' | 'Delivered';
+  deliveredDate?: string;
+  cancelReason?: string;
 }
 
 export interface Review {

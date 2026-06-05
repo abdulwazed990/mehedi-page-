@@ -5,7 +5,7 @@
 
 import { Product, SliderItem, Review } from './types';
 
-// Let's declare the 5 Facebook Product representations with authentic data and corresponding FB link
+/// Let's declare the 5 Facebook Product representations with authentic data and corresponding FB link
 export const products: Product[] = [
   {
     id: "hand-henna-premium-large",
@@ -41,26 +41,29 @@ export const products: Product[] = [
     description: "নখকে উজ্জ্বল ও দীর্ঘস্থায়ী গাঢ় লালচে কালার দিতে বিশেষভাবে প্রস্তুত। সহজে রঙ ছড়ায় না এবং নখ ভালো রাখে।"
   },
   {
-    id: "organic-combo-bulk",
-    name: "Signature Organic Bulk Pack",
-    nameBangla: "সিগনেচার অর্গানিক কোণ বাল্ক প্যাক",
-    weightRange: "৫টি কোণের কম্বো",
-    price: 450,
+    id: "mehendi-combo-1",
+    name: "Mehendi Combo 1",
+    nameBangla: "মেহেদী কম্বো-১ 🌿",
+    weightRange: "হাতের ২ টা + নখের ১ টা",
+    price: 350,
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQS2WFZeNs6mafsGLYN2mwOzu9Ifsg-H7LbDVuFWeXP3w&s",
+    fbImageLink: "https://www.facebook.com/share/1BZPmSDNYt/",
+    category: "hand",
+    isCombo: true,
+    description: "হাতের ২টি প্রিমিয়াম লার্জ হেনা কোণ এবং ১টি অর্গানিক নেইল হেনা-র প্রিমিয়াম সাশ্রয়ী কম্বো প্যাক। মাত্র ৩৫০ টাকায় সম্পূর্ণ রাজকীয় স্পর্শ!"
+  },
+  {
+    id: "mehendi-combo-2",
+    name: "Mehendi Combo 2",
+    nameBangla: "মেহেদী কম্বো-২ 🌿",
+    weightRange: "হাতের ৪ টা + নখের ১ টা",
+    price: 550,
     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXXeGZ9NpNoSfJJgBh4GElDQmMrhVoGIx2wq9nGuP2ag&s",
     fbImageLink: "https://www.facebook.com/share/18eu9SXdF2/",
     category: "hand",
-    description: "উৎসবের আনন্দে পুরো পরিবার মেতে উঠতে ৫টি লার্জ সাইজ স্পেশাল অর্গানিক কোণের সাশ্রয়ী কম্বো প্যাক। ৩ পিসের বেশি অর্ডারে ফ্রি ডেলিভেরি!"
-  },
-  {
-    id: "festive-henna-combo",
-    name: "Festive Organic Henna Premium Set",
-    nameBangla: "ফেস্টিভ স্পেশাল প্রিমিয়াম কম্বো",
-    weightRange: "হ্যান্ড ও নেইল হেনা সেট",
-    price: 520,
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQS2WFZeNs6mafsGLYN2mwOzu9Ifsg-H7LbDVuFWeXP3w&s",
-    fbImageLink: "https://www.facebook.com/share/18aNSrcp1Q/",
-    category: "hand",
-    description: "৩টি লার্জ হেনা কোণ ও ২টি অর্গানিক নেইল হেনার প্রিমিয়াম লাক্সারি কম্বো সেট। বিয়ে বা যেকোনো ঘরোয়া উৎসবের জন্য পারফেক্ট প্যাকেজ।"
+    isCombo: true,
+    isHighlighted: true,
+    description: "হাতের ৪টি প্রিমিয়াম লার্জ হেনা কোণ এবং ১টি অর্গানিক নেইল হেনা-র সেরা ধামাকা প্যাক। রাজকীয় আভা ও গাঢ় কনে সাজের জন্য সবচেয়ে জনপ্রিয় হাইলাইট কম্বো!"
   }
 ];
 

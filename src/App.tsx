@@ -18,6 +18,8 @@ import WhyChooseUs from './components/WhyChooseUs';
 import CustomerExperience from './components/CustomerExperience';
 import CheckoutSection from './components/CheckoutSection';
 import CartDrawer from './components/CartDrawer';
+import AdminPanel from './components/AdminPanel';
+import QuantityAlertModal from './components/QuantityAlertModal';
 
 export default function App() {
   // Application State managers
@@ -26,10 +28,25 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [district, setDistrict] = useState('ঢাকা');
   const [activeTab, setActiveTab] = useState<'shop' | 'orders'>('shop');
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
+    return sessionStorage.getItem('jannats_henna_admin_logged_in') === 'true';
+  });
+  
+  // Quantity validation state managers
+  const [isMinQtyAlertOpen, setIsMinQtyAlertOpen] = useState(false);
+  const [alertProduct, setAlertProduct] = useState<Product | null>(null);
+  const [alertType, setAlertType] = useState<'cart' | 'order' | null>(null);
   
   // Confetti / Invoice Success Modal State
   const [newlyCreatedOrder, setNewlyCreatedOrder] = useState<Order | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Sync scroll to top on login
+  useEffect(() => {
+    if (isAdminLoggedIn) {
+      window.scrollTo(0, 0);
+    }
+  }, [isAdminLoggedIn]);
 
   // References for scrolling
   const productsRef = useRef<HTMLDivElement>(null);
@@ -71,7 +88,7 @@ export default function App() {
     }
   };
 
-  // Add items handler
+  // Add items handler with minimum requirement check
   const handleAddToCart = (product: Product, quantity: number) => {
     setCart((prev) => {
       const existingIdx = prev.findIndex((item) => item.product.id === product.id);
@@ -82,11 +99,21 @@ export default function App() {
       }
       return [...prev, { product, quantity }];
     });
+
+    const totalQtyInCart = cart.reduce((v, item) => v + item.quantity, 0);
+    const existingIdx = cart.findIndex((item) => item.product.id === product.id);
+    const existingQty = existingIdx > -1 ? cart[existingIdx].quantity : 0;
+    const resultingTotalQty = totalQtyInCart - existingQty + (existingQty + quantity);
+    
+    if (resultingTotalQty < 2) {
+      setAlertProduct(product);
+      setAlertType('cart');
+      setIsMinQtyAlertOpen(true);
+    }
   };
 
-  // Direct fast-checkout handler
+  // Direct fast-checkout handler with minimum requirement check
   const handleOrderNow = (product: Product, quantity: number) => {
-    // Add to cart if not present, then open order placement directly
     setCart((prev) => {
       const existingIdx = prev.findIndex((item) => item.product.id === product.id);
       if (existingIdx > -1) {
@@ -97,10 +124,45 @@ export default function App() {
       return [...prev, { product, quantity }];
     });
 
-    // Timeout allows DOM state to flush nicely before scroll triggers
-    setTimeout(() => {
-      scrollToSection('checkout-form-section');
-    }, 150);
+    const totalQtyInCart = cart.reduce((v, item) => v + item.quantity, 0);
+    const existingIdx = cart.findIndex((item) => item.product.id === product.id);
+    const existingQty = existingIdx > -1 ? cart[existingIdx].quantity : 0;
+    const resultingTotalQty = existingIdx > -1 
+      ? totalQtyInCart - existingQty + quantity 
+      : totalQtyInCart + quantity;
+
+    if (resultingTotalQty < 2) {
+      setAlertProduct(product);
+      setAlertType('order');
+      setIsMinQtyAlertOpen(true);
+    } else {
+      // Timeout allows DOM state to flush nicely before scroll triggers
+      setTimeout(() => {
+        scrollToSection('checkout-form-section');
+      }, 150);
+    }
+  };
+
+  // Auto set quantity of selected product to 2
+  const handleAutoSetMinimum = () => {
+    if (!alertProduct) return;
+    const targetQuantity = 2;
+    
+    setCart((prev) => {
+      const existingIdx = prev.findIndex((item) => item.product.id === alertProduct.id);
+      if (existingIdx > -1) {
+        const updated = [...prev];
+        updated[existingIdx].quantity = targetQuantity;
+        return updated;
+      }
+      return [...prev, { product: alertProduct, quantity: targetQuantity }];
+    });
+
+    if (alertType === 'order') {
+      setTimeout(() => {
+        scrollToSection('checkout-form-section');
+      }, 150);
+    }
   };
 
   const handleOrderSuccessCallback = (completedOrder: Order) => {
@@ -109,6 +171,29 @@ export default function App() {
     setNewlyCreatedOrder(completedOrder);
     window.scrollTo({ top: 150, behavior: 'smooth' });
   };
+
+  if (isAdminLoggedIn) {
+    return (
+      <div className="min-h-screen bg-[#FAFDF9] text-slate-800 selection:bg-[#5D7A5C] selection:text-white flex flex-col font-sans relative overflow-x-hidden p-4 sm:p-8">
+        <div className="max-w-7xl mx-auto w-full mb-6 flex justify-between items-center bg-white border border-[#D2E4D0] p-4 rounded-3xl shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="p-2 rounded-xl bg-[#EAF4E8] text-[#5D7A5C]">
+              <Leaf className="h-5 w-5" />
+            </span>
+            <span className="font-serif font-extrabold text-[#2B4429] tracking-tight font-bengali text-base sm:text-lg font-bold">
+              জান্নাত’স হেনা — গোপন প্রশাসনিক এলাকা (Admin Centre)
+            </span>
+          </div>
+          <p className="text-[10px] sm:text-xs text-slate-400 font-mono">UTC: 2026-06-05</p>
+        </div>
+        
+        <AdminPanel 
+          onOrdersUpdated={loadOrders} 
+          onAdminLoginStateChange={setIsAdminLoggedIn}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FAF6EE] text-slate-700 selection:bg-[#cfa856] selection:text-white flex flex-col font-sans relative overflow-x-hidden pb-12">
@@ -161,18 +246,201 @@ export default function App() {
           </p>
         </div>
 
-        {/* Product Cards Layout Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={handleAddToCart}
-              onOrderNow={handleOrderNow}
-            />
-          ))}
+        {/* 1. Single Premium Products Sub-section */}
+        <div className="mb-14">
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <div className="h-px bg-gradient-to-r from-transparent to-[#8FA88B]/40 flex-1"></div>
+            <h3 className="text-lg sm:text-xl font-serif font-bold text-[#5D7A5C] tracking-wide inline-flex items-center gap-1.5 px-4 font-bengali">
+              <span>🌿 সিঙ্গেল প্রিমিয়াম প্রোডাক্টস সমূহ</span>
+            </h3>
+            <div className="h-px bg-gradient-to-l from-transparent to-[#8FA88B]/40 flex-1"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {products.filter(p => !p.isCombo).map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={handleAddToCart}
+                onOrderNow={handleOrderNow}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* 2. Mehendi Premium Combo Offertory Section */}
+        <div>
+          <div className="flex items-center justify-center gap-2 mb-8 pt-6">
+            <div className="h-px bg-gradient-to-r from-transparent to-[#cfa856]/40 flex-1"></div>
+            <h3 className="text-lg sm:text-xl font-serif font-bold text-[#cfa856] tracking-wide inline-flex items-center gap-1.5 px-4 font-bengali">
+              <span>🌿 স্পেশাল মেহেদী কম্বো অফার</span>
+            </h3>
+            <div className="h-px bg-gradient-to-l from-transparent to-[#cfa856]/40 flex-1"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+            {products.filter(p => p.isCombo).map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={handleAddToCart}
+                onOrderNow={handleOrderNow}
+              />
+            ))}
+          </div>
         </div>
       </main>
+
+      {/* 🌿 ব্যবহার প্রণালী ও আফটার কেয়ার Section (Soft Sweet Green Theme) */}
+      <section className="bg-gradient-to-b from-[#F2F8F1] via-[#FAFDF9] to-[#F2F8F1] py-16 px-4 border-t-2 border-b-2 border-[#D6E8D4]/80 relative" id="mehendi-guidelines">
+        {/* Background decorative mehendi leaf layers */}
+        <div className="absolute top-[5%] left-[2%] w-32 h-32 bg-[#5D7A5C]/5 rounded-full blur-2xl pointer-events-none select-none"></div>
+        <div className="absolute bottom-[5%] right-[2%] w-32 h-32 bg-[#8FA88B]/5 rounded-full blur-2xl pointer-events-none select-none"></div>
+
+        {/* Premium Mehendi Leaf Ornamental Border Accent */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-[#8FA88B]/50 to-transparent"></div>
+        
+        <div className="max-w-6xl mx-auto relative px-2 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+            
+            {/* Section 1: ব্যবহার প্রণালী */}
+            <div className="bg-white/95 border-2 border-[#D2E4D0] hover:border-[#B1D5AD] rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col justify-between transition-all duration-300">
+              {/* Premium Mehendi Leaf Border Decoration on corners */}
+              <div className="absolute top-0 right-0 w-24 h-24 text-[#5D7A5C]/5 pointer-events-none transform translate-x-4 -translate-y-4 select-none opacity-20">
+                <Leaf className="w-full h-full text-[#5D7A5C]" />
+              </div>
+              <div className="absolute bottom-0 left-0 w-20 h-20 text-[#5D7A5C]/5 pointer-events-none transform -translate-x-4 translate-y-4 rotate-180 select-none opacity-20">
+                <Leaf className="w-full h-full text-[#5D7A5C]" />
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2.5 mb-6 border-b border-[#E3F0E1] pb-4">
+                  <span className="p-2.5 rounded-xl bg-[#5D7A5C]/10 text-[#5D7A5C]">
+                    <Leaf className="h-6 w-6 stroke-[2]" />
+                  </span>
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#2B4429] leading-tight font-bengali">
+                      🌿 ব্যবহার প্রণালী
+                    </h3>
+                    <p className="text-[10px] text-[#5D7A5C] font-semibold uppercase tracking-wider font-sans mt-0.5">
+                      Usage Guidelines
+                    </p>
+                  </div>
+                </div>
+
+                {/* Content elements - Easy, beautiful & readable Bengali format */}
+                <div className="space-y-4 text-left">
+                  <div className="flex gap-3.5 items-start p-3 bg-[#F8FDF7] hover:bg-[#F0F8EE] rounded-xl border border-[#EAF4E8] transition-colors">
+                    <span className="text-[#5D7A5C] mt-0.5 text-base shrink-0 select-none">🍃</span>
+                    <p className="text-xs sm:text-sm text-[#3E503C] leading-relaxed font-semibold font-bengali">
+                      মেহেদি লাগানোর পর কমপক্ষে ৩–৪ ঘণ্টা হাতে রাখুন। তবে সবচেয়ে ভালো রঙ পেতে সারা রাত হাতে রাখতে পারেন।
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3.5 items-start p-3 bg-[#F8FDF7] hover:bg-[#F0F8EE] rounded-xl border border-[#EAF4E8] transition-colors">
+                    <span className="text-[#5D7A5C] mt-0.5 text-base shrink-0 select-none">🍃</span>
+                    <div className="space-y-1">
+                      <p className="text-xs sm:text-sm text-[#3E503C] leading-relaxed font-semibold font-bengali">
+                        মেহেদি দেওয়ার পর প্রথম ২৪ ঘণ্টা যতটা সম্ভব পানি এড়িয়ে চলুন। এতে রঙ আরও গাঢ় ও দীর্ঘস্থায়ী হবে।
+                      </p>
+                      <p className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-105 px-2 py-0.5 rounded-md inline-block font-bengali">
+                        💧 (শুধুমাত্র অজুর পানি ব্যবহার করতে পারবেন)
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3.5 items-start p-3 bg-[#F8FDF7] hover:bg-[#F0F8EE] rounded-xl border border-[#EAF4E8] transition-colors">
+                    <span className="text-[#5D7A5C] mt-0.5 text-base shrink-0 select-none">🍃</span>
+                    <p className="text-xs sm:text-sm text-[#3E503C] leading-relaxed font-semibold font-bengali">
+                      মেহেদি শুকিয়ে গেলে পানি দিয়ে ধুবেন না। স্বাভাবিকভাবে শুকিয়ে ঝরে যেতে দিন।
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3.5 items-start p-3 bg-[#F8FDF7] hover:bg-[#F0F8EE] rounded-xl border border-[#EAF4E8] transition-colors">
+                    <span className="text-[#5D7A5C] mt-0.5 text-base shrink-0 select-none">🍃</span>
+                    <p className="text-xs sm:text-sm text-[#3E503C] leading-relaxed font-semibold font-bengali">
+                      অবশিষ্ট মেহেদি ডিপ ফ্রিজে সংরক্ষণ করুন। এতে প্রায় ৬ মাস পর্যন্ত ভালো থাকে।
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3.5 items-start p-3 bg-[#F8FDF7] hover:bg-[#F0F8EE] rounded-xl border border-[#EAF4E8] transition-colors">
+                    <span className="text-[#5D7A5C] mt-0.5 text-base shrink-0 select-none">🍃</span>
+                    <p className="text-xs sm:text-sm text-[#3E503C] leading-relaxed font-semibold font-bengali">
+                      তবে যত দ্রুত সম্ভব ব্যবহার করলে সবচেয়ে ভালো রেজাল্ট পাওয়া যায়।
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3.5 items-start p-3 bg-[#F8FDF7] hover:bg-[#F0F8EE] rounded-xl border border-[#EAF4E8] transition-colors">
+                    <span className="text-[#5D7A5C] mt-0.5 text-base shrink-0 select-none">🍃</span>
+                    <p className="text-xs sm:text-sm text-[#3E503C] leading-relaxed font-semibold font-bengali">
+                      একবার মেহেদি খুললে চেষ্টা করবেন একবারেই ব্যবহার করতে। নাহলে পরবর্তীতে কালার কম আসতে পারে।
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: আফটার কেয়ার (রঙ গাঢ় করার যত্ন) */}
+            <div className="bg-white/95 border-2 border-[#D2E4D0] hover:border-[#B1D5AD] rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden flex flex-col justify-between transition-all duration-300">
+              {/* Premium Mehendi Leaf Border Decoration on corners */}
+              <div className="absolute top-0 right-0 w-24 h-24 text-[#5D7A5C]/5 pointer-events-none transform translate-x-4 -translate-y-4 select-none opacity-20">
+                <Leaf className="w-full h-full text-[#5D7A5C]" />
+              </div>
+              <div className="absolute bottom-0 left-0 w-20 h-20 text-[#5D7A5C]/5 pointer-events-none transform -translate-x-4 translate-y-4 rotate-180 select-none opacity-20">
+                <Leaf className="w-full h-full text-[#5D7A5C]" />
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2.5 mb-6 border-b border-[#E3F0E1] pb-4">
+                  <span className="p-2.5 rounded-xl bg-[#5D7A5C]/10 text-[#5D7A5C]">
+                    <Sparkles className="h-6 w-6 stroke-[2]" />
+                  </span>
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-serif font-bold text-[#2B4429] leading-tight font-bengali">
+                      🌿 আফটার কেয়ার (রঙ গাঢ় করার যত্ন)
+                    </h3>
+                    <p className="text-[10px] text-[#5D7A5C] font-semibold uppercase tracking-wider font-sans mt-0.5">
+                      Premium After Care
+                    </p>
+                  </div>
+                </div>
+
+                {/* Content elements - Easy, beautiful & readable Bengali format */}
+                <div className="space-y-4 text-left">
+                  <div className="flex gap-3.5 items-start p-3.5 bg-[#FFFDF6] hover:bg-[#FFFBF0] rounded-xl border border-[#FAEDCD]/40 transition-colors">
+                    <span className="text-amber-600 mt-0.5 text-base shrink-0 select-none">✨</span>
+                    <p className="text-xs sm:text-sm text-[#4E3F30] leading-relaxed font-semibold font-bengali">
+                      মেহেদি একটু শুকিয়ে গেলে চাইলে লবঙ্গের তাপ নিতে পারেন।
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3.5 items-start p-3.5 bg-[#FFFDF6] hover:bg-[#FFFBF0] rounded-xl border border-[#FAEDCD]/40 transition-colors">
+                    <span className="text-amber-600 mt-0.5 text-base shrink-0 select-none">✨</span>
+                    <p className="text-xs sm:text-sm text-[#4E3F30] leading-relaxed font-semibold font-bengali">
+                      হাতে একটি ওড়না পেঁচিয়ে রাখলে মেহেদি সহজে ঝরে পড়বে না।
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3.5 items-start p-3.5 bg-[#FFFDF6] hover:bg-[#FFFBF0] rounded-xl border border-[#FAEDCD]/40 transition-colors">
+                    <span className="text-amber-600 mt-0.5 text-base shrink-0 select-none">✨</span>
+                    <p className="text-xs sm:text-sm text-[#4E3F30] leading-relaxed font-semibold font-bengali">
+                      মেহেদি উঠানোর সময় সরিষার তেল ব্যবহার করুন। এতে আরও গাঢ় ও সুন্দর ডার্ক স্টেইন পাওয়া যায়।
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sweet note badge sticker aesthetics */}
+              <div className="mt-8 pt-6 border-t border-[#E3F0E1] text-center">
+                <span className="inline-block text-[11px] text-[#5D7A5C] font-bold bg-[#EAF4E8] border border-[#D2E4D0] py-1.5 px-4 rounded-xl font-bengali uppercase tracking-wider">
+                  🌿 প্রাকৃতিক ও নিরাপদ মেহেদীর শতভাগ রঙের নিশ্চয়তা
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
 
       {/* Customer reviews and test gallery */}
       <CustomerExperience />
@@ -183,6 +451,7 @@ export default function App() {
           cart={cart}
           setCart={setCart}
           onOrderSuccess={handleOrderSuccessCallback}
+          onMinQtyError={() => setIsMinQtyAlertOpen(true)}
         />
       </div>
 
@@ -214,6 +483,9 @@ export default function App() {
         </div>
       </footer>
 
+      {/* 🔒 Secure Admin Panel Portal placed discreetly below footer */}
+      <AdminPanel onOrdersUpdated={loadOrders} onAdminLoginStateChange={setIsAdminLoggedIn} />
+
       {/* Global Slide out Side drawer for shopping cart */}
       <CartDrawer
         isOpen={isCartOpen}
@@ -223,6 +495,15 @@ export default function App() {
         district={district}
         setDistrict={setDistrict}
         scrollToSection={scrollToSection}
+        onMinQtyError={() => setIsMinQtyAlertOpen(true)}
+      />
+
+      {/* Global Minimum order requirement notification popup */}
+      <QuantityAlertModal
+        isOpen={isMinQtyAlertOpen}
+        onClose={() => setIsMinQtyAlertOpen(false)}
+        onAutoCorrect={handleAutoSetMinimum}
+        onChooseDifferent={() => scrollToSection('products-shelf')}
       />
 
       {/* Floating Bottom Cart indicator trigger on mobile */}

@@ -5,8 +5,9 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { Leaf, ShoppingCart, Facebook } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { CartItem } from '../types';
+const jannatHennaLogo = "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQQ6JKGwb71171h7CiAV9S5ykk4aOvj_xb0NAdiM12T30BsZtjB";
 
 interface HeaderProps {
   cart: CartItem[];
@@ -30,14 +31,32 @@ export default function Header({
     <header className="sticky top-0 z-50 bg-[#FAF6EE]/95 backdrop-blur-md border-b border-[#EADFC9]/70 shadow-sm px-4 py-3 md:py-4 transition-all">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         
-        {/* Brand Name Logo Frame with elegant leaf motifs */}
+        {/* Brand Name Logo Frame with elegant Facebook Profile avatar logo */}
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 md:h-11 md:w-11 rounded-full bg-[#8FA88B]/10 border border-[#8FA88B]/40 flex items-center justify-center relative shadow-sm">
-            <Leaf className="h-5 w-5 text-[#5D7A5C]" />
-            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#cfa856] animate-pulse" />
+          <div className="shrink-0 relative group">
+            <a
+              href="https://www.facebook.com/share/19D7XXhtWS/"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Visit Jannat's Henna Facebook Page"
+              className="block cursor-pointer"
+            >
+              <div className="h-12 w-12 md:h-14 md:w-14 rounded-full p-[2px] bg-gradient-to-tr from-[#cfa856] via-[#8FA88B] to-[#5D7A5C] shadow-lg hover:rotate-6 transition-transform duration-500 relative">
+                <img
+                  src={jannatHennaLogo}
+                  alt="Jannat's Henna Facebook Profile Logo"
+                  referrerPolicy="no-referrer"
+                  className="h-full w-full rounded-full object-cover border border-white bg-[#FAF6EE]"
+                />
+                {/* Real-time floating online status indicator decoration */}
+                <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center shadow-md">
+                  <span className="absolute top-0 left-0 h-full w-full rounded-full bg-emerald-500 animate-ping opacity-75" />
+                </span>
+              </div>
+            </a>
           </div>
 
-          <div className="text-center sm:text-left">
+          <div className="text-left">
             <motion.h1 
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
@@ -71,9 +90,14 @@ export default function Header({
             href="https://www.facebook.com/share/19D7XXhtWS/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-blue-550/10 hover:bg-blue-600/10 border border-blue-500/20 text-[#2E4A2E] text-xs font-bold transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1877F2]/10 hover:bg-[#1877F2]/15 border border-[#1877F2]/20 text-[#1877F2] text-xs font-bold transition-all hover:scale-105"
           >
-            <Facebook className="h-3.5 w-3.5 text-blue-600 fill-blue-600" />
+            <img
+              src={jannatHennaLogo}
+              alt="Jannat's Henna Mini Logo"
+              referrerPolicy="no-referrer"
+              className="h-4.5 w-4.5 rounded-full object-cover border border-[#1877F2]/20 shrink-0 shadow-sm"
+            />
             <span>ফেসবুক পেজ</span>
           </a>
 

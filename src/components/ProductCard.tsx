@@ -28,20 +28,37 @@ export default function ProductCard({ product, onAddToCart, onOrderNow }: Produc
     setTimeout(() => setIsAdded(false), 2000);
   };
 
+  const isHighlighted = product.isHighlighted;
+  const isCombo = product.isCombo;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6 }}
-      className="group relative bg-[#FAF6EE] border border-[#8FA88B]/30 rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:border-[#cfa856] transition-all duration-300 flex flex-col h-full"
+      className={`group relative rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full ${
+        isHighlighted
+          ? 'bg-gradient-to-b from-[#FFFDF9] to-[#FAF5E6] border-2 border-amber-550 shadow-amber-500/15 ring-4 ring-amber-500/10 scale-[1.01] sm:scale-[1.02] md:scale-105 z-10'
+          : isCombo
+            ? 'bg-gradient-to-b from-[#F7FBF6] to-[#FAF6EE] border border-[#8FA88B] shadow-[#8FA88B]/10 hover:border-[#cfa856]'
+            : 'bg-[#FAF6EE] border border-[#8FA88B]/30 hover:border-[#cfa856]'
+      }`}
       id={`product-card-${product.id}`}
     >
       {/* Premium organic badge */}
       <div className="absolute top-3.5 left-3.5 z-10">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF6EE]/95 border border-[#8FA88B]/30 text-[#5D7A5C] text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm backdrop-blur-md">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#cfa856] animate-pulse" />
-          <span>১০০% অর্গানিক হেনা</span>
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm backdrop-blur-md ${
+          isHighlighted
+            ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white border border-amber-400'
+            : isCombo
+              ? 'bg-[#5D7A5C] text-[#FAF6EE] border border-[#8FA88B]'
+              : 'bg-[#FAF6EE]/95 border border-[#8FA88B]/20 text-[#5D7A5C]'
+        }`}>
+          <span className={`h-1.5 w-1.5 rounded-full animate-pulse ${isHighlighted ? 'bg-white' : 'bg-[#cfa856]'}`} />
+          <span>
+            {isHighlighted ? '🔥 ধামাকা কম্বো অফার' : isCombo ? '🌿 স্পেশাল কম্বো অফার' : '১০০% অর্গানিক হেনা'}
+          </span>
         </span>
       </div>
 

@@ -13,9 +13,10 @@ interface CheckoutSectionProps {
   cart: CartItem[];
   setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
   onOrderSuccess: (order: Order) => void;
+  onMinQtyError?: () => void;
 }
 
-export default function CheckoutSection({ cart, setCart, onOrderSuccess }: CheckoutSectionProps) {
+export default function CheckoutSection({ cart, setCart, onOrderSuccess, onMinQtyError }: CheckoutSectionProps) {
   // Form States
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
@@ -63,6 +64,10 @@ export default function CheckoutSection({ cart, setCart, onOrderSuccess }: Check
 
   // Adjust cart quantities directly inside order manager
   const updateQuantity = (productId: string, delta: number) => {
+    if (delta < 0 && totalQty <= 2) {
+      onMinQtyError?.();
+      return;
+    }
     setCart((prev) =>
       prev
         .map((item) => {
@@ -86,6 +91,10 @@ export default function CheckoutSection({ cart, setCart, onOrderSuccess }: Check
     e.preventDefault();
     if (cart.length === 0) {
       alert("দুঃখিত! কোনো প্রোডাক্ট কার্টে যোগ করা হয়নি। অনুগ্রহ করে যেকোনো মেহেদী আগে কার্টে যোগ করুন।");
+      return;
+    }
+    if (totalQty < 2) {
+      onMinQtyError?.();
       return;
     }
     if (!customerName.trim() || !phone.trim() || !address.trim()) {

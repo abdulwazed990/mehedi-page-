@@ -16,6 +16,7 @@ interface CartDrawerProps {
   district: string;
   setDistrict: (district: string) => void;
   scrollToSection: (id: string) => void;
+  onMinQtyError?: () => void;
 }
 
 export default function CartDrawer({
@@ -25,7 +26,8 @@ export default function CartDrawer({
   setCart,
   district,
   setDistrict,
-  scrollToSection
+  scrollToSection,
+  onMinQtyError
 }: CartDrawerProps) {
   const totalCartQty = cart.reduce((val, item) => val + item.quantity, 0);
   const subtotal = cart.reduce((val, item) => val + (item.product.price * item.quantity), 0);
@@ -45,6 +47,10 @@ export default function CartDrawer({
   const grandTotal = subtotal + deliveryCharge;
 
   const updateQuantity = (productId: string, val: number) => {
+    if (val < 0 && totalCartQty <= 2) {
+      onMinQtyError?.();
+      return;
+    }
     setCart((prev) =>
       prev
         .map((item) => {
@@ -62,6 +68,10 @@ export default function CartDrawer({
   };
 
   const handleCheckoutClick = () => {
+    if (totalCartQty < 2) {
+      onMinQtyError?.();
+      return;
+    }
     onClose();
     setTimeout(() => {
       scrollToSection('checkout-form-section');
